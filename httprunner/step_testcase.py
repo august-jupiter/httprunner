@@ -13,24 +13,21 @@ def run_step_testcase(runner: HttpRunner, step: TStep) -> StepResult:
     step_result = StepResult(name=step.name, step_type="testcase")
     step_variables = runner.merge_step_variables(step.variables)
     step_export = step.export
-
     # setup hooks
     if step.setup_hooks:
         call_hooks(runner, step.setup_hooks, step_variables, "setup testcase")
 
     # TODO: override testcase with current step name/variables/export
-    step.variables = step_variables
     # step.testcase is a referenced testcase, e.g. RequestWithFunctions
     ref_case_runner = step.testcase()
     # 由于引用测试用例，参数是外部传入的，这里param就为空列表
     params = []
+    logger.info(f"step.request.params: {step_variables}")
     ref_case_runner.set_referenced().with_session(runner.session).with_case_id(
         runner.case_id
     ).with_variables(step_variables).with_export(step_export).test_start(params)
     
     # teardown hooks
-    # 将export出来的变量更新到step.variables
-    step.variables.update(ref_case_runner.get_export_variables())
 
     if step.teardown_hooks:
         call_hooks(runner, step.teardown_hooks, step.variables, "teardown testcase")
@@ -39,7 +36,6 @@ def run_step_testcase(runner: HttpRunner, step: TStep) -> StepResult:
     step_result.data = summary.step_results  # list of step data
     step_result.export_vars = summary.in_out.export_vars
     step_result.success = summary.success
-
     if step_result.export_vars:
         logger.info(f"export variables: {step_result.export_vars}")
 
