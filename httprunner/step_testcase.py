@@ -28,9 +28,11 @@ def run_step_testcase(runner: HttpRunner, step: TStep) -> StepResult:
     ).with_variables(step_variables).with_export(step_export).test_start(params)
     
     # teardown hooks
-
+    # 这里执行完之后export数据还没有被赋值到step.variables，所以如果在teardown hook中使用export的数据会有问题
+    step_variables.update(ref_case_runner.get_export_variables())
+    # 这里还有一个问题，如果不传引用变量，那么形式为 var: hook,这样的变量就不会添加到step.variables中
     if step.teardown_hooks:
-        call_hooks(runner, step.teardown_hooks, step.variables, "teardown testcase")
+        call_hooks(runner, step.teardown_hooks, step_variables, "teardown testcase")
 
     summary: TestCaseSummary = ref_case_runner.get_summary()
     step_result.data = summary.step_results  # list of step data
