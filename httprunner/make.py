@@ -343,11 +343,17 @@ def make_teststep_chain_style(teststep: Dict) -> Text:
                 expect = f'"{expect}"'
 
             message = validator["message"]
-            if message:
-                step_info += f".assert_{assert_method}({check}, {expect}, '{message}')"
+            if assert_method == "custom":
+                custom_comparator = validator["custom_comparator"]
+                if message:
+                    step_info += f".assert_{assert_method}('{custom_comparator}',{check}, {expect}, '{message}')"
+                else:
+                    step_info += f".assert_{assert_method}('{custom_comparator}',{check}, {expect})"
             else:
-                step_info += f".assert_{assert_method}({check}, {expect})"
-
+                if message:
+                    step_info += f".assert_{assert_method}({check}, {expect}, '{message}')"
+                else:
+                    step_info += f".assert_{assert_method}({check}, {expect})"
     return f"Step({step_info})"
 
 

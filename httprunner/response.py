@@ -72,6 +72,7 @@ def uniform_validator(validator):
             }
 
     """
+    custom_comparator = ''
     if not isinstance(validator, dict):
         raise ParamsError(f"invalid validator: {validator}")
 
@@ -94,17 +95,25 @@ def uniform_validator(validator):
         # format2
         comparator = list(validator.keys())[0]
         compare_values = validator[comparator]
-
-        if not isinstance(compare_values, list) or len(compare_values) not in [2, 3]:
-            raise ParamsError(f"invalid validator: {validator}")
-
-        check_item = compare_values[0]
-        expect_value = compare_values[1]
-        if len(compare_values) == 3:
-            message = compare_values[2]
+        if comparator == "custom":
+            custom_comparator = compare_values[0]
+            check_item = compare_values[1]
+            expect_value = compare_values[2]
+            if len(compare_values) == 4:
+                message = compare_values[3]
+            else:
+                message = ""
         else:
-            # len(compare_values) == 2
-            message = ""
+            if not isinstance(compare_values, list) or len(compare_values) not in [2, 3]:
+                raise ParamsError(f"invalid validator: {validator}")
+
+            check_item = compare_values[0]
+            expect_value = compare_values[1]
+            if len(compare_values) == 3:
+                message = compare_values[2]
+            else:
+                # len(compare_values) == 2
+                message = ""
 
     else:
         raise ParamsError(f"invalid validator: {validator}")
@@ -113,6 +122,7 @@ def uniform_validator(validator):
     assert_method = get_uniform_comparator(comparator)
 
     return {
+        "custom_comparator": custom_comparator,
         "check": check_item,
         "expect": expect_value,
         "assert": assert_method,
@@ -201,6 +211,9 @@ class ResponseObjectBase(object):
 
             # comparator
             assert_method = u_validator["assert"]
+            if assert_method == "custom":
+                assert_method = u_validator["custom_comparator"]
+
             assert_func = self.parser.get_mapping_function(assert_method)
 
             # expect item
