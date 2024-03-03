@@ -127,8 +127,9 @@ def run_step_request(runner: HttpRunner, step: TStep) -> StepResult:
     request_print += f"method: {method}\n"
     for k, v in parsed_request_dict.items():
         request_print += f"{k}: {pretty_format(v)}\n"
-
-    logger.debug(request_print)
+    logger.info(f"runner.get_is_referenced(): {runner.get_is_referenced()}")
+    if not runner.get_is_referenced():
+        logger.debug(request_print)
     if ALLURE is not None:
         ALLURE.attach(
             request_print,
@@ -148,7 +149,8 @@ def run_step_request(runner: HttpRunner, step: TStep) -> StepResult:
         resp_body = resp.content
 
     response_print += f"body: {pretty_format(resp_body)}\n"
-    logger.debug(response_print)
+    if not runner.get_is_referenced():
+        logger.debug(response_print)
     if ALLURE is not None:
         ALLURE.attach(
             response_print,

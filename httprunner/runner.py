@@ -77,6 +77,9 @@ class SessionRunner(object):
 
     def get_config(self) -> TConfig:
         return self.__config
+    
+    def get_is_referenced(self) -> bool:
+        return self.__is_referenced
 
     def set_referenced(self) -> "SessionRunner":
         self.__is_referenced = True
@@ -178,7 +181,8 @@ class SessionRunner(object):
             step (Step): teststep
 
         """
-        logger.info(f"run step begin: {step.name()} >>>>>>")
+        if not self.__is_referenced:
+            logger.info(f"run step begin: {step.name()} >>>>>>")
 
         # run step
         for i in range(step.retry_times + 1):
@@ -205,8 +209,8 @@ class SessionRunner(object):
         self.__session_variables.update(step_result.export_vars)
         # update testcase summary
         self.__step_results.append(step_result)
-
-        logger.info(f"run step end: {step.name()} <<<<<<\n")
+        if not self.__is_referenced:
+            logger.info(f"run step end: {step.name()} <<<<<<\n")
 
     def test_start(self, param: Dict = None) -> "SessionRunner":
         """main entrance, discovered by pytest"""
@@ -223,21 +227,22 @@ class SessionRunner(object):
         logger.info(
             f"Start to run testcase: {self.__config.name}, TestCase ID: {self.case_id}"
         )
-
-        logger.add(self.__log_path, format=LOGGER_FORMAT, level="DEBUG")
+        if not self.__is_referenced:
+            logger.add(self.__log_path, format=LOGGER_FORMAT, level="DEBUG")
         self.__start_at = time.time()
         try:
             # run step in sequential order
             for step in self.teststeps:
                 self.__run_step(step)
         finally:
-            logger.info(f"generate testcase log: {self.__log_path}")
-            if ALLURE is not None:
-                ALLURE.attach.file(
-                    self.__log_path,
-                    name="all log",
-                    attachment_type=ALLURE.attachment_type.TEXT,
-                )
+            if not self.__is_referenced:
+                logger.info(f"generate testcase log: {self.__log_path}")
+                if ALLURE is not None:
+                    ALLURE.attach.file(
+                        self.__log_path,
+                        name="all log",
+                        attachment_type=ALLURE.attachment_type.TEXT,
+                    )
 
         self.__duration = time.time() - self.__start_at
         return self
