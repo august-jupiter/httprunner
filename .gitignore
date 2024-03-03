@@ -40,7 +40,6 @@ debugtalk.so
 .venv
 __pycache__
 *.pyc
-dist
 *.egg-info
 .python-version
 .pytest_cache
