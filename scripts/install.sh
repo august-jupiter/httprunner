@@ -139,8 +139,9 @@ function main() {
 
     if [[ -f $HOME/.hrp/venv/bin/pip3 ]]; then
         echoInfo "Upgrade httprunner..."
-        echo "$ $HOME/.hrp/venv/bin/pip3 install --upgrade httprunner==$version --index-url https://pypi.org/simple"
-        $HOME/.hrp/venv/bin/pip3 install --upgrade httprunner==$version --index-url https://pypi.org/simple
+        curl https://github.com/august-jupiter/httprunner/blob/master/dist/httprunner-4.3.5-py3-none-any.whl -o httprunner.whl
+        # echo "$ $HOME/.hrp/venv/bin/pip3 install --upgrade httprunner==$version --index-url https://pypi.org/simple"
+        $HOME/.hrp/venv/bin/pip3 install httprunner.whl
     fi
 }
 
