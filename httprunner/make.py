@@ -55,9 +55,20 @@ from httprunner import RunTestCase
 
 class {{ class_name }}(HttpRunner):
 
-    {% if parameters and skip %}
+    {% if parameters and skip and marks%}
     @pytest.mark.parametrize("param", Parameters({{ parameters }}))
-    @pytest.mark.skip(reason={{ skip }})
+    @pytest.mark.skip(reason="{{ skip }}")
+    {% for mark in marks %}
+    @pytest.mark.{{ mark }}
+    {% endfor %}
+    def test_start(self, param):
+        super().test_start(param)
+
+    {% elif parameters and marks %}
+    @pytest.mark.parametrize("param", Parameters({{parameters}}))
+    {% for mark in marks %}
+    @pytest.mark.{{ mark }}
+    {% endfor %}
     def test_start(self, param):
         super().test_start(param)
 
@@ -67,7 +78,7 @@ class {{ class_name }}(HttpRunner):
         super().test_start(param)
 
     {% elif skip %}
-    @pytest.mark.skip(reason={{ skip }})
+    @pytest.mark.skip(reason="{{ skip }}")
     def test_start(self):
         super().test_start()
     {% endif %}
@@ -449,6 +460,7 @@ sys.path.insert(0, str(Path(__file__){parent}))
         "imports_list": imports_list,
         "config_chain_style": make_config_chain_style(config),
         "skip": make_config_skip(config),
+        "marks": config.get("marks", []),
         "parameters": config.get("parameters"),
         "reference_testcase": any(step.get("testcase") for step in teststeps),
         "teststeps_chain_style": [
