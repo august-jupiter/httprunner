@@ -103,7 +103,7 @@ def run_step_request(runner: HttpRunner, step: TStep) -> StepResult:
         key: request_headers[key] for key in request_headers if not key.startswith(":")
     }
     request_headers[
-        "HRUN-Request-ID"
+        "X-Trace-Id"
     ] = f"HRUN-{runner.case_id}-{str(int(time.time() * 1000))[-6:]}"
     parsed_request_dict["headers"] = request_headers
 
