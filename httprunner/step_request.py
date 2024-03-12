@@ -104,7 +104,7 @@ def run_step_request(runner: HttpRunner, step: TStep) -> StepResult:
     }
     request_headers[
         "X-Trace-Id"
-    ] = f"HRUN-{runner.case_id}-{str(int(time.time() * 1000))[-6:]}"
+    ] = f"AUTOMATION-{runner.case_id}-{str(int(time.time() * 1000))[-6:]}"
     parsed_request_dict["headers"] = request_headers
 
     step_variables["request"] = parsed_request_dict
