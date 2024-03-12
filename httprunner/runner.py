@@ -181,14 +181,20 @@ class SessionRunner(object):
             step (Step): teststep
 
         """
+        if step.name().startswith("$"):
+            step_name= self.parser.parse_data(step.name(), self.__config.variables)
+        else:
+            step_name = step.name()
+
         if not self.__is_referenced:
-            logger.info(f"run step begin: {step.name()} >>>>>>")
+            logger.info(f"run step begin: {step_name} >>>>>>")
 
         # run step
         for i in range(step.retry_times + 1):
             try:
                 if ALLURE is not None:
-                    with ALLURE.step(f"step: {step.name()}"):
+                    # 如果stepname是变量，则解析后再传入
+                    with ALLURE.step(f"step: {step_name}"):
                         step_result: StepResult = step.run(self)
                 else:
                     step_result: StepResult = step.run(self)
@@ -198,11 +204,11 @@ class SessionRunner(object):
                     raise
                 else:
                     logger.warning(
-                        f"run step {step.name()} validation failed,wait {step.retry_interval} sec and try again"
+                        f"run step {step_name} validation failed,wait {step.retry_interval} sec and try again"
                     )
                     time.sleep(step.retry_interval)
                     logger.info(
-                        f"run step retry ({i + 1}/{step.retry_times} time): {step.name()} >>>>>>"
+                        f"run step retry ({i + 1}/{step.retry_times} time): {step_name} >>>>>>"
                     )
 
         # save extracted variables to session variables
@@ -210,7 +216,7 @@ class SessionRunner(object):
         # update testcase summary
         self.__step_results.append(step_result)
         if not self.__is_referenced:
-            logger.info(f"run step end: {step.name()} <<<<<<\n")
+            logger.info(f"run step end: {step_name} <<<<<<\n")
 
     def test_start(self, param: Dict = None) -> "SessionRunner":
         """main entrance, discovered by pytest"""
@@ -221,7 +227,11 @@ class SessionRunner(object):
 
         if ALLURE is not None and not self.__is_referenced:
             # update allure report meta
-            ALLURE.dynamic.title(self.__config.name)
+            logger.info(f"update allure report meta: {self.__config}")
+            if self.__config.variables.get("desc") is not None:
+                ALLURE.dynamic.title(self.__config.name + "--> " + self.__config.variables.get("desc"))
+            else:
+                ALLURE.dynamic.title(self.__config.name)
             ALLURE.dynamic.description(f"TestCase ID: {self.case_id}")
             git_repo = self.__project_meta.env.get("git_repo", '')
             file_ext = self.__project_meta.env.get("file_ext", '')
